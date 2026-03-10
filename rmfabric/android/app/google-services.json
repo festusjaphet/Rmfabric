@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "824800689402",
+    "project_id": "fesbat-b59dd",
+    "storage_bucket": "fesbat-b59dd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:824800689402:android:4a318dd47f3641ccf75d43",
+        "android_client_info": {
+          "package_name": "com.example.fesbrat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "824800689402-jgb5gum59pueh6a4q5jci0si3sm2mlhd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.fesbrat",
+            "certificate_hash": "ccce80597bd78a6ed970a8b1c6ca93e0272a766e"
+          }
+        },
+        {
+          "client_id": "824800689402-jv9i5mefmrt7dpa40ieq1qmp91fc2h4t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOkFNgdZXF3Mox6ncf_WYd1Ph8rmc4xok"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "824800689402-jv9i5mefmrt7dpa40ieq1qmp91fc2h4t.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "824800689402-ih7si3ujtb0e3ap961tjbk7mtiebufpf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.fesbrat"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:824800689402:android:030df839779917bef75d43",
+        "android_client_info": {
+          "package_name": "com.festusjaphet.rmfabric"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "824800689402-jv9i5mefmrt7dpa40ieq1qmp91fc2h4t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOkFNgdZXF3Mox6ncf_WYd1Ph8rmc4xok"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "824800689402-jv9i5mefmrt7dpa40ieq1qmp91fc2h4t.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "824800689402-ih7si3ujtb0e3ap961tjbk7mtiebufpf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.fesbrat"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

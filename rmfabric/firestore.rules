@@ -1,0 +1,98 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── HELPER FUNCTIONS ─────────────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/RM_users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isSeller() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/RM_users/$(request.auth.uid)).data.role == 'seller';
+    }
+
+    function isDayClosed(dayId) {
+      return exists(/databases/$(database)/documents/RM_days/$(dayId)) &&
+        get(/databases/$(database)/documents/RM_days/$(dayId)).data.isClosed == true;
+    }
+
+    // ─── RM_users ─────────────────────────────────────────────────────────────
+    match /RM_users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ─── RM_products ──────────────────────────────────────────────────────────
+    match /RM_products/{productId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ─── RM_sales ─────────────────────────────────────────────────────────────
+    match /RM_sales/{saleId} {
+      // Both admin and sellers can read
+      allow read: if isAuthenticated();
+
+      // Seller can only create if:
+      //   1. They are authenticated
+      //   2. The day is NOT closed
+      //   3. The sellerId matches their own uid
+      allow create: if isAuthenticated() &&
+        !isDayClosed(request.resource.data.dayId) &&
+        (request.resource.data.sellerId == request.auth.uid || isAdmin());
+
+      // Sales are IMMUTABLE — no updates or deletes
+      allow update, delete: if false;
+    }
+
+    // ─── RM_expenses ──────────────────────────────────────────────────────────
+    match /RM_expenses/{expenseId} {
+      allow read: if isAdmin();
+
+      // Only admin can create expenses, and only if day is open
+      allow create: if isAdmin() &&
+        !isDayClosed(request.resource.data.dayId);
+
+      // Expenses are IMMUTABLE
+      allow update, delete: if false;
+    }
+
+    // ─── RM_days ──────────────────────────────────────────────────────────────
+    match /RM_days/{dayId} {
+      allow read: if isAuthenticated();
+
+      // Only admin can close the day (create/update day document)
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ─── RM_reports_daily ─────────────────────────────────────────────────────
+    match /RM_reports_daily/{date} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // ─── RM_reports_weekly ────────────────────────────────────────────────────
+    match /RM_reports_weekly/{weekId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // ─── RM_reports_monthly ───────────────────────────────────────────────────
+    match /RM_reports_monthly/{monthId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+  }
+}
