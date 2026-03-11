@@ -57,7 +57,7 @@ class ExpensesScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Total: KES ${expProv.todayTotalExpenses.toStringAsFixed(2)}',
+                        'Total: Tsh ${expProv.todayTotalExpenses.toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: AppTheme.danger,

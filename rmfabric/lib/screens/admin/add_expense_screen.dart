@@ -99,7 +99,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   decimal: true,
                 ),
                 decoration: const InputDecoration(
-                  labelText: 'Amount (KES)',
+                  labelText: 'Amount (Tsh)',
                   prefixIcon: Icon(Icons.money),
                 ),
                 validator: (v) {

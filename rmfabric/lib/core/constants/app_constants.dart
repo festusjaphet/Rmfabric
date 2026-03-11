@@ -10,6 +10,7 @@ const String colDays = 'RM_days';
 const String colReportsDaily = 'RM_reports_daily';
 const String colReportsWeekly = 'RM_reports_weekly';
 const String colReportsMonthly = 'RM_reports_monthly';
+const String colStockMovements = 'RM_stock_movements';
 
 // User Roles
 const String roleAdmin = 'admin';
@@ -33,3 +34,15 @@ const List<String> expenseCategories = [
   'Marketing',
   'Other',
 ];
+
+// Product Categories
+const List<String> productCategories = [
+  'Fabric',
+  'Clothes',
+  'Accessories',
+  'Tailoring Supplies',
+  'Other',
+];
+
+// Stock thresholds
+const int lowStockThreshold = 5;

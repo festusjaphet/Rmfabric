@@ -174,6 +174,8 @@ class ProfitLineChart extends StatelessWidget {
               height: 180,
               child: allValues.isEmpty
                   ? const Center(child: Text('No data yet'))
+                  : labels.length == 1
+                  ? _buildSingleDayBarChart(maxY)
                   : LineChart(
                       LineChartData(
                         maxY: maxY,
@@ -246,7 +248,92 @@ class ProfitLineChart extends StatelessWidget {
       color: color,
       barWidth: 2.5,
       dotData: const FlDotData(show: false),
-      belowBarData: BarAreaData(show: true, color: color.withValues(alpha: 0.08)),
+      belowBarData: BarAreaData(
+        show: true,
+        color: color.withValues(alpha: 0.08),
+      ),
+    );
+  }
+
+  Widget _buildSingleDayBarChart(double maxY) {
+    return BarChart(
+      BarChartData(
+        maxY: maxY,
+        titlesData: FlTitlesData(
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 55,
+              getTitlesWidget: (v, meta) => Text(
+                _shortNum(v),
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (v, meta) {
+                if (v.toInt() == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      labels[0],
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        gridData: const FlGridData(show: true),
+        barGroups: [
+          BarChartGroupData(
+            x: 0,
+            barRods: [
+              BarChartRodData(
+                toY: salesData[0],
+                color: AppTheme.primary,
+                width: 14,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(4),
+                ),
+              ),
+              BarChartRodData(
+                toY: expenseData[0],
+                color: AppTheme.danger,
+                width: 14,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(4),
+                ),
+              ),
+              BarChartRodData(
+                toY: profitData[0],
+                color: AppTheme.success,
+                width: 14,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(4),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

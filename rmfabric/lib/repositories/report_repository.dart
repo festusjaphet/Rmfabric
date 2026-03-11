@@ -58,6 +58,24 @@ class ReportRepository {
     await _firestoreService.saveDayStatus(dayStatus);
   }
 
+  /// Reopen the day: reset isClosed to false so sellers can add more sales.
+  Future<void> openDay(String adminId) async {
+    final today = DateTime.now();
+    final dayId = DateHelpers.dayId(today);
+
+    final dayStatus = DayStatusModel(
+      date: dayId,
+      isClosed: false,
+      closedBy: '',
+      closedAt: today,
+      totalSales: 0,
+      totalCost: 0,
+      totalExpenses: 0,
+      totalProfit: 0,
+    );
+    await _firestoreService.saveDayStatus(dayStatus);
+  }
+
   // ─── DAILY REPORTS ──────────────────────────────────────────────────────────
 
   Future<DailyReportModel?> getDailyReport(String date) =>

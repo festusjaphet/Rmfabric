@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ─── HELPER FUNCTIONS ─────────────────────────────────────────────────────
+    // ─── HELPER FUNCTIONS ─────────────────────────────────────
 
     function isAuthenticated() {
       return request.auth != null;
@@ -10,12 +10,14 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() &&
-        get(/databases/$(database)/documents/RM_users/$(request.auth.uid)).data.role == 'admin';
+        exists(/databases/$(database)/documents/RM_users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/RM_users/$(request.auth.uid)).data.role == "admin";
     }
 
     function isSeller() {
       return isAuthenticated() &&
-        get(/databases/$(database)/documents/RM_users/$(request.auth.uid)).data.role == 'seller';
+        exists(/databases/$(database)/documents/RM_users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/RM_users/$(request.auth.uid)).data.role == "seller";
     }
 
     function isDayClosed(dayId) {
@@ -23,76 +25,112 @@ service cloud.firestore {
         get(/databases/$(database)/documents/RM_days/$(dayId)).data.isClosed == true;
     }
 
-    // ─── RM_users ─────────────────────────────────────────────────────────────
+    // ─── RM_users ─────────────────────────────────────────────
+
     match /RM_users/{userId} {
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
-      allow create, update: if isAdmin();
+
+      allow read: if isAuthenticated();
+
+      allow create: if isAuthenticated() &&
+        (request.auth.uid == userId || isAdmin());
+
+      allow update: if isAdmin();
+
       allow delete: if false;
     }
 
-    // ─── RM_products ──────────────────────────────────────────────────────────
+    // ─── RM_products ──────────────────────────────────────────
+
     match /RM_products/{productId} {
+
       allow read: if isAuthenticated();
-      allow create, update, delete: if isAdmin();
+
+      allow create: if isAdmin();
+
+      // Admin edits products
+      // Sellers allowed ONLY for stock deduction during sale
+      allow update: if isAdmin() || isSeller();
+
+      allow delete: if false;
     }
 
-    // ─── RM_sales ─────────────────────────────────────────────────────────────
+    // ─── RM_sales ─────────────────────────────────────────────
+
     match /RM_sales/{saleId} {
-      // Both admin and sellers can read
+
       allow read: if isAuthenticated();
 
-      // Seller can only create if:
-      //   1. They are authenticated
-      //   2. The day is NOT closed
-      //   3. The sellerId matches their own uid
       allow create: if isAuthenticated() &&
         !isDayClosed(request.resource.data.dayId) &&
         (request.resource.data.sellerId == request.auth.uid || isAdmin());
 
-      // Sales are IMMUTABLE — no updates or deletes
       allow update, delete: if false;
     }
 
-    // ─── RM_expenses ──────────────────────────────────────────────────────────
+    // ─── RM_expenses ──────────────────────────────────────────
+
     match /RM_expenses/{expenseId} {
+
       allow read: if isAdmin();
 
-      // Only admin can create expenses, and only if day is open
       allow create: if isAdmin() &&
         !isDayClosed(request.resource.data.dayId);
 
-      // Expenses are IMMUTABLE
       allow update, delete: if false;
     }
 
-    // ─── RM_days ──────────────────────────────────────────────────────────────
+    // ─── RM_days ──────────────────────────────────────────────
+
     match /RM_days/{dayId} {
+
       allow read: if isAuthenticated();
 
-      // Only admin can close the day (create/update day document)
       allow create, update: if isAdmin();
+
       allow delete: if false;
     }
 
-    // ─── RM_reports_daily ─────────────────────────────────────────────────────
+    // ─── RM_reports_daily ─────────────────────────────────────
+
     match /RM_reports_daily/{date} {
+
       allow read: if isAdmin();
-      allow create: if isAdmin();
-      allow update, delete: if false;
+
+      allow create, update: if isAdmin();
+
+      allow delete: if false;
     }
 
-    // ─── RM_reports_weekly ────────────────────────────────────────────────────
+    // ─── RM_reports_weekly ────────────────────────────────────
+
     match /RM_reports_weekly/{weekId} {
-      allow read: if isAdmin();
-      allow create: if isAdmin();
+
+      allow read, create, update: if isAdmin();
+
+      allow delete: if false;
+    }
+
+    // ─── RM_reports_monthly ───────────────────────────────────
+
+    match /RM_reports_monthly/{monthId} {
+
+      allow read, create, update: if isAdmin();
+
+      allow delete: if false;
+    }
+
+    // ─── RM_stock_movements ───────────────────────────────────
+
+    match /RM_stock_movements/{movementId} {
+
+      allow read: if isAuthenticated();
+
+      // Sellers create movement when they sell
+      // Admin creates movement when restocking
+      allow create: if isAuthenticated();
+
       allow update, delete: if false;
     }
 
-    // ─── RM_reports_monthly ───────────────────────────────────────────────────
-    match /RM_reports_monthly/{monthId} {
-      allow read: if isAdmin();
-      allow create: if isAdmin();
-      allow update, delete: if false;
-    }
   }
 }

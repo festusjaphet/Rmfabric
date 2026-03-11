@@ -12,14 +12,18 @@ class ProductRepository {
 
   Future<void> addProduct({
     required String name,
+    required String category,
     required double sellingPrice,
     required double costPrice,
+    required double initialStock,
   }) async {
     final product = ProductModel(
       productId: const Uuid().v4(),
       name: name.trim(),
+      category: category,
       sellingPrice: sellingPrice,
       costPrice: costPrice,
+      stockQty: initialStock,
       active: true,
       createdAt: DateTime.now(),
     );

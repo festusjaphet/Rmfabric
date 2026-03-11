@@ -4,7 +4,7 @@ class SaleModel {
   final String saleId;
   final String productId;
   final String productName;
-  final int quantity;
+  final double quantity;
   final double sellingPrice;
   final double costPrice;
   final double totalSale;
@@ -43,7 +43,7 @@ class SaleModel {
       saleId: doc.id,
       productId: data['productId'] ?? '',
       productName: data['productName'] ?? '',
-      quantity: (data['quantity'] ?? 1).toInt(),
+      quantity: (data['quantity'] ?? 1).toDouble(),
       sellingPrice: (data['sellingPrice'] ?? 0).toDouble(),
       costPrice: (data['costPrice'] ?? 0).toDouble(),
       totalSale: (data['totalSale'] ?? 0).toDouble(),

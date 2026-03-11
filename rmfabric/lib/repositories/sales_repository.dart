@@ -2,6 +2,7 @@ import 'package:uuid/uuid.dart';
 import '../core/helpers/date_helpers.dart';
 import '../models/sale_model.dart';
 import '../models/report_model.dart';
+import '../models/stock_movement_model.dart';
 import '../services/firestore_service.dart';
 
 class SalesRepository {
@@ -13,7 +14,7 @@ class SalesRepository {
   Future<void> recordSale({
     required String productId,
     required String productName,
-    required int quantity,
+    required double quantity,
     required double sellingPrice,
     required double costPrice,
     required String sellerId,
@@ -45,6 +46,21 @@ class SalesRepository {
     );
 
     await _firestoreService.addSale(sale);
+
+    // Deduct stock atomically
+    await _firestoreService.adjustStockQty(productId, -quantity);
+
+    // Record the stock movement
+    final movement = StockMovementModel(
+      movementId: const Uuid().v4(),
+      productId: productId,
+      productName: productName,
+      quantityChange: -quantity,
+      reason: 'sale',
+      createdBy: sellerId,
+      createdAt: now,
+    );
+    await _firestoreService.addStockMovement(movement);
   }
 
   Stream<List<SaleModel>> watchTodaySales() =>

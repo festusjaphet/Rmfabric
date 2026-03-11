@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart' as app_auth;
 import '../../providers/sales_provider.dart';
 import '../../providers/expense_provider.dart';
 import '../../providers/report_provider.dart';
+import '../../providers/stock_provider.dart';
 import '../../widgets/dashboard_stat_card.dart';
 import '../../widgets/chart_widget.dart';
 import 'products_screen.dart';
@@ -16,6 +17,8 @@ import 'weekly_reports_screen.dart';
 import 'monthly_reports_screen.dart';
 import 'custom_reports_screen.dart';
 import 'close_day_screen.dart';
+import 'stock_screen.dart';
+import 'users_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -30,6 +33,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<SalesProvider>(context, listen: false).init(null);
+      // Only admins reach this screen — safe to start the RM_reports_daily stream.
+      Provider.of<ReportProvider>(context, listen: false).initAdminStreams();
     });
   }
 
@@ -39,8 +44,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final salesProv = Provider.of<SalesProvider>(context);
     final expProv = Provider.of<ExpenseProvider>(context);
     final reportProv = Provider.of<ReportProvider>(context);
+    final stockProv = Provider.of<StockProvider>(context);
 
     final todayProfit = salesProv.todayTotalProfit - expProv.todayTotalExpenses;
+    final lowStockCount =
+        stockProv.outOfStock.length + stockProv.lowStock.length;
 
     // Build chart data from last 7 daily reports
     final dailyReports = reportProv.recentDailyReports;
@@ -67,15 +75,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Dashboard'),
+        title: const Text('RM Fabrics'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
-            onPressed: () => Provider.of<app_auth.AuthProvider>(
-              context,
-              listen: false,
-            ).signOut(),
+            onPressed: () async {
+              await Provider.of<app_auth.AuthProvider>(
+                context,
+                listen: false,
+              ).signOut();
+            },
           ),
         ],
       ),
@@ -145,7 +155,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 mainAxisSpacing: 12,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                childAspectRatio: 1.4,
+                childAspectRatio: 1.2,
                 children: [
                   DashboardStatCard(
                     title: 'Today Sales',
@@ -190,6 +200,51 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
           ),
 
+          // Low-stock alert banner
+          if (lowStockCount > 0)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+              sliver: SliverToBoxAdapter(
+                child: GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const StockScreen()),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.warning.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppTheme.warning.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.warning_amber,
+                          color: AppTheme.warning,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '$lowStockCount product(s) need restocking  →',
+                          style: const TextStyle(
+                            color: AppTheme.warning,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
           // Quick Nav
           const SliverPadding(
             padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
@@ -213,7 +268,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 crossAxisSpacing: 10,
                 childAspectRatio: 0.95,
               ),
-              delegate: SliverChildListDelegate(_menuItems(context)),
+              delegate: SliverChildListDelegate(
+                _menuItems(context, reportProv.isDayClosed),
+              ),
             ),
           ),
         ],
@@ -221,7 +278,50 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  List<Widget> _menuItems(BuildContext context) {
+  Future<void> _confirmReopenDay(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reopen Day?'),
+        content: const Text(
+          'Are you sure you want to reopen today? Sellers will be able to record new sales.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.warning,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Reopen'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      final auth = Provider.of<app_auth.AuthProvider>(context, listen: false);
+      final reportProv = Provider.of<ReportProvider>(context, listen: false);
+      final success = await reportProv.openDay(
+        adminId: auth.currentUser!.userId,
+      );
+      if (success && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Day has been reopened successfully.')),
+        );
+      } else if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(reportProv.error ?? 'Failed to reopen day')),
+        );
+      }
+    }
+  }
+
+  List<Widget> _menuItems(BuildContext context, bool isDayClosed) {
     final items = [
       _NavTile(
         'Products',
@@ -287,14 +387,40 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
       ),
       _NavTile(
-        'Close Day',
-        Icons.lock_clock,
-        AppTheme.danger,
+        'Stock',
+        Icons.warehouse_outlined,
+        Colors.indigo,
         () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const CloseDayScreen()),
+          MaterialPageRoute(builder: (_) => const StockScreen()),
         ),
       ),
+      _NavTile(
+        'Users',
+        Icons.manage_accounts,
+        Colors.deepPurple,
+        () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const UsersScreen()),
+        ),
+      ),
+      if (isDayClosed)
+        _NavTile(
+          'Reopen Day',
+          Icons.lock_open,
+          AppTheme.warning,
+          () => _confirmReopenDay(context),
+        )
+      else
+        _NavTile(
+          'Close Day',
+          Icons.lock_clock,
+          AppTheme.danger,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CloseDayScreen()),
+          ),
+        ),
     ];
     return items;
   }

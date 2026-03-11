@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/report_model.dart';
 import '../models/sale_model.dart';
@@ -6,6 +7,8 @@ import '../repositories/report_repository.dart';
 
 class ReportProvider extends ChangeNotifier {
   final ReportRepository _repo;
+  StreamSubscription? _statusSub;
+  StreamSubscription? _reportsSub;
 
   DayStatusModel? _todayStatus;
   PeriodReportModel? _currentReport;
@@ -23,14 +26,44 @@ class ReportProvider extends ChangeNotifier {
   String? get error => _error;
 
   ReportProvider(this._repo) {
-    _repo.watchTodayStatus().listen((status) {
+    // Always watch today's day-status — sellers need this to know if
+    // sales are locked for the day. RM_days allows read for all auth users.
+    _statusSub = _repo.watchTodayStatus().listen((status) {
       _todayStatus = status;
       notifyListeners();
     });
-    _repo.watchRecentDailyReports().listen((reports) {
+    // RM_reports_daily is admin-only in Firestore rules.
+    // Do NOT subscribe here — would cause PERMISSION_DENIED for seller accounts.
+    // Call initAdminStreams() explicitly from the admin dashboard.
+  }
+
+  /// Must be called ONLY after confirming the user is an admin.
+  /// Starts the RM_reports_daily real-time stream for the chart + daily list.
+  void initAdminStreams() {
+    _reportsSub?.cancel();
+    _reportsSub = _repo.watchRecentDailyReports().listen((reports) {
       _recentDailyReports = reports;
       notifyListeners();
     });
+  }
+
+  void clear() {
+    _statusSub?.cancel();
+    _reportsSub?.cancel();
+    _statusSub = null;
+    _reportsSub = null;
+    _todayStatus = null;
+    _currentReport = null;
+    _recentDailyReports = [];
+    _error = null;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _statusSub?.cancel();
+    _reportsSub?.cancel();
+    super.dispose();
   }
 
   Future<bool> closeDay({
@@ -49,6 +82,22 @@ class ReportProvider extends ChangeNotifier {
       return false;
     } finally {
       _closingDay = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> openDay({required String adminId}) async {
+    _error = null;
+    _loading = true;
+    notifyListeners();
+    try {
+      await _repo.openDay(adminId);
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _loading = false;
       notifyListeners();
     }
   }

@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/expense_model.dart';
 import '../repositories/expense_repository.dart';
 
 class ExpenseProvider extends ChangeNotifier {
   final ExpenseRepository _repo;
+  StreamSubscription? _sub;
 
   List<ExpenseModel> _todayExpenses = [];
   bool _loading = false;
@@ -17,7 +19,7 @@ class ExpenseProvider extends ChangeNotifier {
       _todayExpenses.fold(0.0, (s, e) => s + e.amount);
 
   ExpenseProvider(this._repo) {
-    _repo.watchTodayExpenses().listen(
+    _sub = _repo.watchTodayExpenses().listen(
       (list) {
         _todayExpenses = list;
         notifyListeners();
@@ -27,6 +29,20 @@ class ExpenseProvider extends ChangeNotifier {
         notifyListeners();
       },
     );
+  }
+
+  void clear() {
+    _sub?.cancel();
+    _sub = null;
+    _todayExpenses = [];
+    _error = null;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 
   Future<bool> addExpense({

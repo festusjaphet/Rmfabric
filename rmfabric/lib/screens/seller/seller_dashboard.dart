@@ -41,10 +41,12 @@ class _SellerDashboardState extends State<SellerDashboard> {
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
-            onPressed: () => Provider.of<app_auth.AuthProvider>(
-              context,
-              listen: false,
-            ).signOut(),
+            onPressed: () async {
+              await Provider.of<app_auth.AuthProvider>(
+                context,
+                listen: false,
+              ).signOut();
+            },
           ),
         ],
       ),

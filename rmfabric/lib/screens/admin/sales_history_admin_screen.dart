@@ -33,7 +33,7 @@ class SalesHistoryAdminScreen extends StatelessWidget {
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       Text(
-                        'KES ${salesProv.todayTotalSales.toStringAsFixed(2)}',
+                        'Tsh ${salesProv.todayTotalSales.toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: AppTheme.primary,

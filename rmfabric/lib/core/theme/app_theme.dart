@@ -3,8 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Brand Colors
-  static const Color primary = Color(0xFF1A237E); // Deep Indigo
-  static const Color primaryLight = Color(0xFF3949AB);
+  static const Color primary = Color.fromARGB(255, 126, 26, 101); // Deep Indigo
+  static const Color primaryLight = Color.fromARGB(255, 171, 57, 160);
   static const Color accent = Color(0xFFFFB300); // Amber
   static const Color success = Color(0xFF2E7D32);
   static const Color danger = Color(0xFFC62828);

@@ -1,1 +1,47 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"fesbat-b59dd","appId":"1:824800689402:android:030df839779917bef75d43","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"fesbat-b59dd","appId":"1:824800689402:ios:137fc90535740815f75d43","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"macos":{"default":{"projectId":"fesbat-b59dd","appId":"1:824800689402:ios:137fc90535740815f75d43","uploadDebugSymbols":false,"fileOutput":"macos/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"fesbat-b59dd","configurations":{"android":"1:824800689402:android:030df839779917bef75d43","ios":"1:824800689402:ios:137fc90535740815f75d43","macos":"1:824800689402:ios:137fc90535740815f75d43","web":"1:824800689402:web:4f0e79bc7d803dedf75d43","windows":"1:824800689402:web:d5fdbc5443c5b7d2f75d43"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "fesbat-b59dd",
+          "appId": "1:824800689402:android:030df839779917bef75d43",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "fesbat-b59dd",
+          "appId": "1:824800689402:ios:137fc90535740815f75d43",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "fesbat-b59dd",
+          "appId": "1:824800689402:ios:137fc90535740815f75d43",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "fesbat-b59dd",
+          "configurations": {
+            "android": "1:824800689402:android:030df839779917bef75d43",
+            "ios": "1:824800689402:ios:137fc90535740815f75d43",
+            "macos": "1:824800689402:ios:137fc90535740815f75d43",
+            "web": "1:824800689402:web:4f0e79bc7d803dedf75d43",
+            "windows": "1:824800689402:web:d5fdbc5443c5b7d2f75d43"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "database": "(default)",
+    "location": "europe-west2",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

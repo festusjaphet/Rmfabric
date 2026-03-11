@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/product_model.dart';
 import '../repositories/product_repository.dart';
 
 class ProductProvider extends ChangeNotifier {
   final ProductRepository _repo;
+  StreamSubscription? _sub;
 
   List<ProductModel> _products = [];
   bool _loading = false;
@@ -18,7 +20,8 @@ class ProductProvider extends ChangeNotifier {
   }
 
   void _watchProducts() {
-    _repo.watchProducts().listen(
+    _sub?.cancel();
+    _sub = _repo.watchProducts().listen(
       (list) {
         _products = list;
         notifyListeners();
@@ -30,17 +33,35 @@ class ProductProvider extends ChangeNotifier {
     );
   }
 
+  void clear() {
+    _sub?.cancel();
+    _sub = null;
+    _products = [];
+    _error = null;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
   Future<bool> addProduct({
     required String name,
+    required String category,
     required double sellingPrice,
     required double costPrice,
+    required double initialStock,
   }) async {
     _error = null;
     try {
       await _repo.addProduct(
         name: name,
+        category: category,
         sellingPrice: sellingPrice,
         costPrice: costPrice,
+        initialStock: initialStock,
       );
       return true;
     } catch (e) {

@@ -66,7 +66,7 @@ class ProductsScreen extends StatelessWidget {
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     subtitle: Text(
-                      'Sell: KES ${p.sellingPrice.toStringAsFixed(2)}  •  Cost: KES ${p.costPrice.toStringAsFixed(2)}',
+                      'Sell: Tsh ${p.sellingPrice.toStringAsFixed(2)}  •  Cost: Tsh ${p.costPrice.toStringAsFixed(2)}',
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,

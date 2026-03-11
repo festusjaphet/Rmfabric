@@ -18,7 +18,7 @@ class DateHelpers {
   }
 
   static String formatCurrency(double amount) =>
-      NumberFormat.currency(symbol: 'KES ', decimalDigits: 2).format(amount);
+      NumberFormat.currency(symbol: 'Tsh ', decimalDigits: 2).format(amount);
 
   static String formatDate(DateTime date) =>
       DateFormat('dd MMM yyyy').format(date);

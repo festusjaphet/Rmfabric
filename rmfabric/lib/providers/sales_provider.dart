@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/sale_model.dart';
 import '../repositories/sales_repository.dart';
 
 class SalesProvider extends ChangeNotifier {
   final SalesRepository _repo;
+  StreamSubscription? _sub;
 
   List<SaleModel> _todaySales = [];
   bool _loading = false;
@@ -24,13 +26,28 @@ class SalesProvider extends ChangeNotifier {
   SalesProvider(this._repo);
 
   void init(String? sellerId) {
+    _sub?.cancel();
     if (sellerId != null) {
-      _repo
+      _sub = _repo
           .watchSellerTodaySales(sellerId)
           .listen(_updateSales, onError: _onError);
     } else {
-      _repo.watchTodaySales().listen(_updateSales, onError: _onError);
+      _sub = _repo.watchTodaySales().listen(_updateSales, onError: _onError);
     }
+  }
+
+  void clear() {
+    _sub?.cancel();
+    _sub = null;
+    _todaySales = [];
+    _error = null;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 
   void _updateSales(List<SaleModel> sales) {
@@ -46,7 +63,7 @@ class SalesProvider extends ChangeNotifier {
   Future<bool> recordSale({
     required String productId,
     required String productName,
-    required int quantity,
+    required double quantity,
     required double sellingPrice,
     required double costPrice,
     required String sellerId,

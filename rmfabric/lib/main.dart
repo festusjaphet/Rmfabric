@@ -9,11 +9,13 @@ import 'repositories/product_repository.dart';
 import 'repositories/sales_repository.dart';
 import 'repositories/expense_repository.dart';
 import 'repositories/report_repository.dart';
+import 'repositories/stock_repository.dart';
 import 'providers/auth_provider.dart' as app_auth;
 import 'providers/product_provider.dart';
 import 'providers/sales_provider.dart';
 import 'providers/expense_provider.dart';
 import 'providers/report_provider.dart';
+import 'providers/stock_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/seller/seller_dashboard.dart';
 import 'screens/admin/admin_dashboard.dart';
@@ -35,6 +37,7 @@ void main() async {
   final salesRepo = SalesRepository(firestoreService);
   final expenseRepo = ExpenseRepository(firestoreService);
   final reportRepo = ReportRepository(firestoreService);
+  final stockRepo = StockRepository(firestoreService);
 
   runApp(
     MultiProvider(
@@ -42,10 +45,11 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => app_auth.AuthProvider(authService),
         ),
-        ChangeNotifierProvider(create: (_) => ProductProvider(productRepo)),
-        ChangeNotifierProvider(create: (_) => SalesProvider(salesRepo)),
-        ChangeNotifierProvider(create: (_) => ExpenseProvider(expenseRepo)),
-        ChangeNotifierProvider(create: (_) => ReportProvider(reportRepo)),
+        Provider<ProductRepository>.value(value: productRepo),
+        Provider<SalesRepository>.value(value: salesRepo),
+        Provider<ExpenseRepository>.value(value: expenseRepo),
+        Provider<ReportRepository>.value(value: reportRepo),
+        Provider<StockRepository>.value(value: stockRepo),
       ],
       child: const RmFabricApp(),
     ),
@@ -61,6 +65,40 @@ class RmFabricApp extends StatelessWidget {
       title: 'RmFabric',
       theme: AppTheme.theme,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        return Consumer<app_auth.AuthProvider>(
+          builder: (context, auth, _) {
+            if (auth.status == app_auth.AuthStatus.authenticated &&
+                auth.currentUser != null) {
+              return MultiProvider(
+                key: ValueKey(auth.currentUser!.userId),
+                providers: [
+                  ChangeNotifierProvider(
+                    create: (ctx) =>
+                        ProductProvider(ctx.read<ProductRepository>()),
+                  ),
+                  ChangeNotifierProvider(
+                    create: (ctx) => SalesProvider(ctx.read<SalesRepository>()),
+                  ),
+                  ChangeNotifierProvider(
+                    create: (ctx) =>
+                        ExpenseProvider(ctx.read<ExpenseRepository>()),
+                  ),
+                  ChangeNotifierProvider(
+                    create: (ctx) =>
+                        ReportProvider(ctx.read<ReportRepository>()),
+                  ),
+                  ChangeNotifierProvider(
+                    create: (ctx) => StockProvider(ctx.read<StockRepository>()),
+                  ),
+                ],
+                child: child!,
+              );
+            }
+            return child!;
+          },
+        );
+      },
       home: const AppRouter(),
     );
   }
@@ -83,8 +121,8 @@ class AppRouter extends StatelessWidget {
       case app_auth.AuthStatus.authenticated:
         final user = auth.currentUser;
         if (user == null) return const LoginScreen();
-        if (user.isAdmin) return const AdminDashboard();
-        return const SellerDashboard();
+
+        return user.isAdmin ? const AdminDashboard() : const SellerDashboard();
     }
   }
 }

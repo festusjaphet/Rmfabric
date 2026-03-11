@@ -58,7 +58,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     final success = await salesProv.recordSale(
       productId: _selectedProduct!.productId,
       productName: _selectedProduct!.name,
-      quantity: int.parse(_qtyCtrl.text),
+      quantity: double.tryParse(_qtyCtrl.text) ?? 1.0,
       sellingPrice: _selectedProduct!.sellingPrice,
       costPrice: _selectedProduct!.costPrice,
       sellerId: auth.currentUser!.userId,
@@ -90,6 +90,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   @override
   Widget build(BuildContext context) {
     final products = Provider.of<ProductProvider>(context).products;
+    print("====products: $products");
 
     return Scaffold(
       appBar: AppBar(title: const Text('Record New Sale')),
@@ -110,7 +111,9 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<ProductModel>(
-                value: _selectedProduct,
+                value: products.contains(_selectedProduct)
+                    ? _selectedProduct
+                    : null,
                 hint: const Text('Choose a product'),
                 decoration: const InputDecoration(),
                 items: products
@@ -137,17 +140,17 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                     children: [
                       _priceInfo(
                         'Selling Price',
-                        'KES ${_selectedProduct!.sellingPrice.toStringAsFixed(2)}',
+                        'Tsh ${_selectedProduct!.sellingPrice.toStringAsFixed(2)}',
                         AppTheme.primary,
                       ),
                       _priceInfo(
                         'Cost Price',
-                        'KES ${_selectedProduct!.costPrice.toStringAsFixed(2)}',
+                        'Tsh ${_selectedProduct!.costPrice.toStringAsFixed(2)}',
                         AppTheme.warning,
                       ),
                       _priceInfo(
                         'Margin',
-                        'KES ${_selectedProduct!.margin.toStringAsFixed(2)}',
+                        'Tsh ${_selectedProduct!.margin.toStringAsFixed(2)}',
                         AppTheme.success,
                       ),
                     ],
@@ -166,13 +169,16 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _qtyCtrl,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                onChanged: (v) => setState(() {}),
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.production_quantity_limits),
                 ),
                 validator: (v) {
-                  final n = int.tryParse(v ?? '');
-                  if (n == null || n < 1) return 'Enter a valid quantity';
+                  final n = double.tryParse(v ?? '');
+                  if (n == null || n <= 0) return 'Enter a valid quantity';
                   return null;
                 },
               ),
@@ -214,7 +220,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                         style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                       Text(
-                        'KES ${((int.tryParse(_qtyCtrl.text) ?? 1) * _selectedProduct!.sellingPrice).toStringAsFixed(2)}',
+                        'Tsh ${((double.tryParse(_qtyCtrl.text) ?? (_qtyCtrl.text.isEmpty ? 0.0 : 1.0)) * _selectedProduct!.sellingPrice).toStringAsFixed(2)}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,

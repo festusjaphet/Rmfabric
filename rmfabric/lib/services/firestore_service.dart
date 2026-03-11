@@ -5,6 +5,7 @@ import '../models/expense_model.dart';
 import '../models/product_model.dart';
 import '../models/user_model.dart';
 import '../models/report_model.dart';
+import '../models/stock_movement_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -172,5 +173,50 @@ class FirestoreService {
         .orderBy('name')
         .snapshots()
         .map((s) => s.docs.map((d) => UserModel.fromFirestore(d)).toList());
+  }
+
+  Future<void> updateUserStatus(String userId, bool active) async {
+    await _db.collection(colUsers).doc(userId).update({'active': active});
+  }
+
+  // ─── STOCK MOVEMENTS ─────────────────────────────────────────────────────────
+
+  CollectionReference get _stockCol => _db.collection(colStockMovements);
+
+  Future<void> addStockMovement(StockMovementModel movement) async {
+    await _stockCol.doc(movement.movementId).set(movement.toFirestore());
+  }
+
+  Stream<List<StockMovementModel>> stockMovementsForProduct(String productId) {
+    return _stockCol
+        .where('productId', isEqualTo: productId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (s) =>
+              s.docs.map((d) => StockMovementModel.fromFirestore(d)).toList(),
+        );
+  }
+
+  Stream<List<StockMovementModel>> recentStockMovements({int limit = 50}) {
+    return _stockCol
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map(
+          (s) =>
+              s.docs.map((d) => StockMovementModel.fromFirestore(d)).toList(),
+        );
+  }
+
+  /// Atomically decrease / increase stockQty on RM_products
+  Future<void> adjustStockQty(String productId, double deltaQty) async {
+    final ref = _db.collection(colProducts).doc(productId);
+    await _db.runTransaction((tx) async {
+      final snap = await tx.get(ref);
+      final data = snap.data();
+      final current = (data?['stockQty'] ?? 0).toDouble();
+      tx.update(ref, {'stockQty': current + deltaQty});
+    });
   }
 }
